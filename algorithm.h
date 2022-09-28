@@ -11,25 +11,20 @@
 
 const unsigned int block = 8;
 
-const double Pi = 3.1415926535;
+const float Pi = 3.1415926535;
 
-struct encode
-{
-    unsigned int length;
-    int v;
-};
 
 namespace algorithm
 {
 
-    double C(int x)
+    float C(int x)
     {
         return x == 0 ? 1 / sqrt(2) : 1; //
     }
 
-    void DCT(double matrix[block][block])
+    void DCT(float matrix[block][block])
     {
-        double result[block][block];
+        float result[block][block];
         for (int u = 0; u < block; u++)
         {
             for (int v = 0; v < block; v++)
@@ -122,7 +117,7 @@ namespace algorithm
         }
     }
 
-    void quantify(int result[block][block], double tmp[block][block], int option)
+    void quantify(int result[block][block], float tmp[block][block], int option)
     {
         // 把tmp量化入result
         // 传入0量化Y，否则量化C
@@ -268,24 +263,26 @@ namespace algorithm
         return std::make_pair(A, B);
     }
 
-    std::pair<std::vector<int>, std::vector<int>> Huffman(std::vector<encode> source)
+    std::pair<std::vector<int>, std::vector<int>> Huffman(std::vector<std::pair<int, int>> source)
     {
         memset(count, 0, 256 * 4);
         for (auto i : source)
         {
-            count[i.length]++;
+            count[i.first]++;
         }
         // 统计出现次数
         return __huffman();
     }
 
-    std::pair<std::vector<int>, std::vector<int>> Huffman(std::vector<encode> source1, std::vector<encode> source2)
+    std::pair<std::vector<int>, std::vector<int>> Huffman(
+        std::vector<std::pair<int, int>> source1,
+        std::vector<std::pair<int, int>> source2)
     {
         memset(count, 0, 256 * 4);
         for (auto i : source1)
-            count[i.length]++;
+            count[i.first]++;
         for (auto i : source2)
-            count[i.length]++;
+            count[i.first]++;
         return __huffman();
     }
 
@@ -336,25 +333,20 @@ namespace algorithm
         }
     };
 
-    int Cnt = 0;
 
-    void outputblock(huffmanmap &mapDC, huffmanmap &mapAC, std::vector<encode>::iterator &DC, std::vector<encode>::iterator &AC)
+    void outputblock(huffmanmap &mapDC, huffmanmap &mapAC, std::vector<std::pair<int, int>>::iterator &DC, std::vector<std::pair<int, int>>::iterator &AC)
     {
         // 单个块输出
-        push(mapDC.query(DC->length).first, mapDC.query(DC->length).second);
-        push(DC->length, DC->v);
-        int total = 0;
+        push(mapDC.query(DC->first).first, mapDC.query(DC->first).second);
+        push(DC->first, DC->second);
         for (;; ++AC)
         {
-            push(mapAC.query(AC->length).first, mapAC.query(AC->length).second);
-            push(AC->length & 15, AC->v);
-            if (AC->length == 0x00)
+            push(mapAC.query(AC->first).first, mapAC.query(AC->first).second);
+            push(AC->first & 15, AC->second);
+            if (AC->first == 0x00)
                 break;
-            total += AC->length >> 4;
-            total++;
             // 把整个AC部分输出
         }
-        // assert(total<=63);
         ++DC;
         ++AC;
     }
@@ -363,23 +355,22 @@ namespace algorithm
                      std::pair<std::vector<int>, std::vector<int>> table1AC,
                      std::pair<std::vector<int>, std::vector<int>> table2DC,
                      std::pair<std::vector<int>, std::vector<int>> table2AC,
-                     std::pair<std::vector<encode>, std::vector<encode>> dataY,
-                     std::pair<std::vector<encode>, std::vector<encode>> dataCb,
-                     std::pair<std::vector<encode>, std::vector<encode>> dataCr)
+                     std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>> dataY,
+                     std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>> dataCb,
+                     std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>> dataCr)
     {
         // 输出最终数据
         huffmanmap mapYDC(table1DC), mapYAC(table1AC), mapCDC(table2DC), mapCAC(table2AC);
 
-        std::vector<encode>::iterator YDC = dataY.first.begin();
-        std::vector<encode>::iterator CbDC = dataCb.first.begin();
-        std::vector<encode>::iterator CrDC = dataCr.first.begin();
-        std::vector<encode>::iterator YAC = dataY.second.begin();
-        std::vector<encode>::iterator CbAC = dataCb.second.begin();
-        std::vector<encode>::iterator CrAC = dataCr.second.begin();
+        std::vector<std::pair<int, int>>::iterator YDC = dataY.first.begin();
+        std::vector<std::pair<int, int>>::iterator CbDC = dataCb.first.begin();
+        std::vector<std::pair<int, int>>::iterator CrDC = dataCr.first.begin();
+        std::vector<std::pair<int, int>>::iterator YAC = dataY.second.begin();
+        std::vector<std::pair<int, int>>::iterator CbAC = dataCb.second.begin();
+        std::vector<std::pair<int, int>>::iterator CrAC = dataCr.second.begin();
 
         for (; YDC != dataY.first.end();)
         {
-            Cnt++;
             outputblock(mapYDC, mapYAC, YDC, YAC);
             outputblock(mapCDC, mapCAC, CrDC, CrAC);
             outputblock(mapCDC, mapCAC, CbDC, CbAC);

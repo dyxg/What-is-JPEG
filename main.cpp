@@ -1,13 +1,11 @@
 #include <cstdio>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 #include <cstring>
+#include <ctime>
 #include "algorithm.h"
 #include "IO.h"
-
-const unsigned int BIT = 8;
-
-const unsigned int Maxlength = 15;
 
 //设定图片大小为SIZE*SIZE
 
@@ -33,23 +31,24 @@ struct picture
 
     unsigned int Xpixel = SIZEX, Ypixel = SIZEY, Xdensity = 64, Ydensity = 64;
 
-    std::pair<std::vector<encode>, std::vector<encode>> Y;  // Y图层游程编码
-    std::pair<std::vector<encode>, std::vector<encode>> Cr; // Cr图层游程编码
-    std::pair<std::vector<encode>, std::vector<encode>> Cb; // Cb图层游程编码
+    std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>> Y;  // Y图层游程编码
+    std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>> Cr; // Cr图层游程编码
+    std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>> Cb; // Cb图层游程编码
 
     std::pair<std::vector<int>, std::vector<int>> YDC; // Y图层DC哈夫曼表
     std::pair<std::vector<int>, std::vector<int>> YAC; // Y图层AC哈夫曼表
     std::pair<std::vector<int>, std::vector<int>> CDC; // C图层DC哈夫曼表
     std::pair<std::vector<int>, std::vector<int>> CAC; // C图层AC哈夫曼表
 
-    std::pair<std::vector<encode>, std::vector<encode>>
-    TransToVector(double ValR, double ValG, double ValB, double ValC, int option)
+    std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>>
+    TransToVector(float ValR, float ValG, float ValB, float ValC, int option)
     {
+        static int Maxlength = 15;
         // 完成 颜色空间转换 + 离散余弦变换 + 量化
-        std::vector<encode> AC;
-        std::vector<encode> DC;
+        std::vector<std::pair<int, int>> AC;
+        std::vector<std::pair<int, int>> DC;
         AC.clear(), DC.clear();
-        double tmp[block][block];
+        float tmp[block][block];
         int result[block][block];
         int line[block * block];
         int pre = 0;
@@ -74,7 +73,7 @@ struct picture
                     line[0] -= v;
                 }
                 // 差分
-                DC.push_back((encode){(algorithm::encodelength(line[0])), algorithm::encodeval(line[0])});
+                DC.push_back(std::make_pair((algorithm::encodelength(line[0])), algorithm::encodeval(line[0])));
 
                 for (unsigned int iterator = 1, nowzero = 0; iterator < block * block; iterator++)
                 {
@@ -82,14 +81,14 @@ struct picture
                         nowzero++;
                     else
                     {
-                        AC.push_back(encode{(unsigned int)((nowzero << (4)) | algorithm::encodelength(line[iterator])),
-                                            algorithm::encodeval(line[iterator])});
+                        AC.push_back(std::make_pair((unsigned int)((nowzero << (4)) | algorithm::encodelength(line[iterator])),
+                                                    algorithm::encodeval(line[iterator])));
                         nowzero = 0;
                     }
                 }
-                while (!AC.empty() && AC.back().length == 0xF0)
+                while (!AC.empty() && AC.back().first == 0xF0)
                     AC.pop_back();
-                AC.push_back(encode{0, 0});
+                AC.push_back(std::make_pair(0, 0));
             }
         }
 
@@ -101,7 +100,7 @@ struct picture
         Cb = TransToVector(CbR, CbG, CbB, 128, 1);
         Cr = TransToVector(CrR, CrG, CrB, 128, 1);
         // 完成编码
-        // std::cerr << clock()/double(CLOCKS_PER_SEC) << std::endl;
+        // std::cerr << clock()/float(CLOCKS_PER_SEC) << std::endl;
         YDC = algorithm::Huffman(Y.first);
         YAC = algorithm::Huffman(Y.second);
         CDC = algorithm::Huffman(Cr.first, Cb.first);
@@ -222,4 +221,5 @@ int main(int argc, char *argv[])
         return 0;
     }
     Transform(argv[1], argv[2], atoi(argv[3]), atoi(argv[4]));
+    std::cerr << "Time cost: " << clock() / float(CLOCKS_PER_SEC)*1000 << "ms" << std::endl;
 }
