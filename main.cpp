@@ -3,7 +3,7 @@
 #include<algorithm>
 #include<cstring>
 
-#include "algo.h"
+#include "algorithm.h"
 #include "IO.h"
 
 
