@@ -1,6 +1,6 @@
-支持Windows、Linux
+支持Linux
 
-### 编译命令（通用）
+### 编译命令
 ```
 g++ main.cpp -O2
 ```
