@@ -19,7 +19,7 @@ namespace algorithm
 
     float C(int x)
     {
-        return x == 0 ? 1 / sqrt(2) : 1; //
+        return x == 0 ? 1 / sqrt(2) : 1; 
     }
 
     void DCT(float matrix[block][block])
@@ -180,7 +180,6 @@ namespace algorithm
         int len = encodelength(val);
         return val + (val < 0) * ((1 << len) - 1);
     }
-
     int count[256];
     std::pair<std::vector<int>, std::vector<int>> __huffman()
     {

@@ -29,7 +29,7 @@ struct picture
     std::vector<std::vector<unsigned char>> R, G, B;
     // unsigned char R[SIZEX][SIZEY],G[SIZEX][SIZEY],B[SIZEX][SIZEY];
 
-    unsigned int Xpixel = SIZEX, Ypixel = SIZEY, Xdensity = 64, Ydensity = 64;
+    unsigned int Xdensity = 64, Ydensity = 64;
 
     std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>> Y;  // Y图层游程编码
     std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>> Cr; // Cr图层游程编码
@@ -40,7 +40,7 @@ struct picture
     std::pair<std::vector<int>, std::vector<int>> CDC; // C图层DC哈夫曼表
     std::pair<std::vector<int>, std::vector<int>> CAC; // C图层AC哈夫曼表
 
-    std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>>
+    private: std::pair<std::vector<std::pair<int, int>>, std::vector<std::pair<int, int>>>
     TransToVector(float ValR, float ValG, float ValB, float ValC, int option)
     {
         static int Maxlength = 15;
@@ -94,19 +94,6 @@ struct picture
 
         return std::make_pair(DC, AC);
     }
-    void Trans()
-    {
-        Y = TransToVector(YR, YG, YB, 0, 0);
-        Cb = TransToVector(CbR, CbG, CbB, 128, 1);
-        Cr = TransToVector(CrR, CrG, CrB, 128, 1);
-        // 完成编码
-        // std::cerr << clock()/float(CLOCKS_PER_SEC) << std::endl;
-        YDC = algorithm::Huffman(Y.first);
-        YAC = algorithm::Huffman(Y.second);
-        CDC = algorithm::Huffman(Cr.first, Cb.first);
-        CAC = algorithm::Huffman(Cr.second, Cb.second);
-        // 哈夫曼表构造
-    }
     void OutputMap(int HT, std::pair<std::vector<int>, std::vector<int>> &Map)
     { // 输出哈夫曼表
         Putchar(0xFF), Putchar(0xC4);
@@ -115,7 +102,7 @@ struct picture
         Putchar(HT);                           // HT信息
         algorithm::printmap(Map);
     }
-    void Output(char *file)
+    public: void Output(char *file)
     {
         freopen(file, "w", stdout);
         Putchar(0xFF), Putchar(0xD8);
@@ -177,15 +164,13 @@ struct picture
         push(255, 1);
 
         Putchar(0xFF), Putchar(0xD9);
-#ifndef DEBUG
         flush();
         fclose(stdout);
-#endif
     }
-    picture(char *file, int X, int Y)
+    picture(char *file, int Xsize, int Ysize)
     {
         freopen(file, "r", stdin);
-        SIZEX = X, SIZEY = Y;
+        SIZEX = Xsize, SIZEY = Ysize;
         R.resize(SIZEX), G.resize(SIZEX), B.resize(SIZEX);
         for (int i = 0; i < SIZEX; i++)
         {
@@ -203,13 +188,22 @@ struct picture
             }
         }
         fclose(stdin);
+        Y = TransToVector(YR, YG, YB, 0, 0);
+        Cb = TransToVector(CbR, CbG, CbB, 128, 1);
+        Cr = TransToVector(CrR, CrG, CrB, 128, 1);
+        // 完成编码
+        // std::cerr << clock()/float(CLOCKS_PER_SEC) << std::endl;
+        YDC = algorithm::Huffman(Y.first);
+        YAC = algorithm::Huffman(Y.second);
+        CDC = algorithm::Huffman(Cr.first, Cb.first);
+        CAC = algorithm::Huffman(Cr.second, Cb.second);
     }
 };
 
 void Transform(char *file_in, char *file_out, int SIZEX, int SIZEY)
 {
     picture P(file_in, SIZEX, SIZEY);
-    P.Trans();
+    // P.Trans();
     P.Output(file_out);
 }
 
@@ -217,7 +211,7 @@ int main(int argc, char *argv[])
 {
     if (argc <= 4)
     {
-        printf("Error\n");
+        printf("too few parameters\n");
         return 0;
     }
     Transform(argv[1], argv[2], atoi(argv[3]), atoi(argv[4]));
