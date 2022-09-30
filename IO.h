@@ -3,7 +3,7 @@
 #ifndef myIO
 #define myIO
 
-#define inMAXBUF 1024 // 读入缓冲区大小
+#define inMAXBUF 5000005 // 读入缓冲区大小
 
 unsigned char inS[inMAXBUF];
 unsigned int inbuf = inMAXBUF;
@@ -22,18 +22,19 @@ unsigned char Getchar()
 
 unsigned char outS[outMAXBUF];
 unsigned int outbuf = 0;
+FILE* output;
 void Putchar(unsigned char ch, bool option = 0)
 { // 把ch写入缓冲区
     if (outbuf == outMAXBUF)
     {
         outbuf = 0;
-        fwrite(outS, 1, outMAXBUF, stdout);
+        fwrite(outS, 1, outMAXBUF, output);
     }
     outS[outbuf++] = ch;
     if (outbuf == outMAXBUF)
     {
         outbuf = 0;
-        fwrite(outS, 1, outMAXBUF, stdout);
+        fwrite(outS, 1, outMAXBUF, output);
     }
     if (option && ch == 0xFF)
     {
@@ -42,7 +43,7 @@ void Putchar(unsigned char ch, bool option = 0)
 }
 void flush()
 { // 输出缓冲区内剩余的元素
-    fwrite(outS, 1, outbuf, stdout);
+    fwrite(outS, 1, outbuf, output);
 }
 
 void push(int len, int v)

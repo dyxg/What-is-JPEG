@@ -104,7 +104,7 @@ struct picture
     }
     public: void Output(char *file)
     {
-        freopen(file, "w", stdout);
+        output = fopen(file,"wb");
         Putchar(0xFF), Putchar(0xD8);
         // 文件头
 
@@ -209,6 +209,7 @@ void Transform(char *file_in, char *file_out, int SIZEX, int SIZEY)
 
 int main(int argc, char *argv[])
 {
+    // freopen(argv[5],"w",stderr);
     if (argc <= 4)
     {
         printf("too few parameters\n");
